@@ -1,5 +1,8 @@
 package br.edu.ifgoiano.academico.sd_academico_turma_service.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -14,7 +17,7 @@ import java.util.List;
 
 /**
  * Controller REST para Turmas
- * 
+ *
  * Endpoints:
  * - POST /turmas - Criar nova turma
  * - GET /turmas - Listar todas as turmas
@@ -22,6 +25,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/turmas")
+@Tag(name = "Turmas", description = "Cadastro, consulta e controle de vagas de turmas")
 public class TurmaController {
 
     private static final Logger logger = LoggerFactory.getLogger(TurmaController.class);
@@ -39,6 +43,8 @@ public class TurmaController {
      * @return Turma criada com ID gerado
      */
     @PostMapping
+    @Operation(summary = "Criar turma",
+            description = "Cria uma nova turma. A disciplina informada precisa existir no disciplina-service.")
     public ResponseEntity<?> criar(@RequestBody TurmaRequestDTO request) {
         logger.info("[TURMA-SERVICE] Criando turma: {}", request.getCodigoTurma());
         try {
@@ -60,6 +66,7 @@ public class TurmaController {
      * @return Lista de turmas
      */
     @GetMapping
+    @Operation(summary = "Listar turmas", description = "Retorna todas as turmas cadastradas.")
     public ResponseEntity<List<TurmaResponseDTO>> listar() {
         logger.info("[TURMA-SERVICE] Listando todas as turmas");
         return ResponseEntity.ok(service.listar());
@@ -71,7 +78,9 @@ public class TurmaController {
      * @return Turma encontrada ou 404
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
+    @Operation(summary = "Buscar turma por ID", description = "Retorna a turma com o ID informado, ou 404 se não existir.")
+    public ResponseEntity<?> buscarPorId(
+            @Parameter(description = "ID da turma", example = "1") @PathVariable Long id) {
         logger.info("[TURMA-SERVICE] Buscando turma ID: {}", id);
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
