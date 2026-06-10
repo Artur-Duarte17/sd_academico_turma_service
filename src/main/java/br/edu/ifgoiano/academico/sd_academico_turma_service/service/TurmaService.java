@@ -34,26 +34,26 @@ public class TurmaService {
     /**
      * Salvar nova turma
      * Define valores padrão se não informados
+     * 
      * @param turma Turma a ser salva
      * @return Turma salva com ID gerado
      */
     public Turma salvar(Turma turma) {
-        
+
         // Inicializar vagas ocupadas se não informadas
         if (turma.getVagasOcupadas() == null) {
             turma.setVagasOcupadas(0);
         }
 
-        // Inicializar status se não informado
-        if (turma.getStatus() == null) {
-            turma.setStatus("ATIVA");
-        }
+        // Define o status de acordo com a quantidade de vagas
+        atualizarStatus(turma);
 
         return repository.save(turma);
     }
 
     /**
      * Listar todas as turmas
+     * 
      * @return Lista de turmas
      */
     public List<Turma> listar() {
@@ -62,6 +62,7 @@ public class TurmaService {
 
     /**
      * Buscar turma por ID
+     * 
      * @param id ID da turma
      * @return Optional contendo a turma se encontrada
      */
@@ -72,6 +73,7 @@ public class TurmaService {
     /**
      * Reservar uma vaga na turma (via gRPC)
      * Verifica se há vagas disponíveis antes de incrementar
+     * 
      * @param turmaId ID da turma
      * @return true se conseguiu reservar, false caso contrário
      */
@@ -100,6 +102,8 @@ public class TurmaService {
             turma.setStatus("LOTADA");
         }
 
+        // Atualiza para LOTADA caso a última vaga tenha sido ocupada
+        atualizarStatus(turma);
         repository.save(turma);
 
         logger.info("[TURMA-SERVICE] Vaga reservada para turma ID: {} | Vagas: {}/{}",
@@ -111,6 +115,7 @@ public class TurmaService {
     /**
      * Liberar uma vaga na turma (via gRPC)
      * Verifica se há vagas ocupadas antes de decrementar
+     * 
      * @param turmaId ID da turma
      * @return true se conseguiu liberar, false caso contrário
      */
@@ -135,6 +140,9 @@ public class TurmaService {
         turma.setVagasOcupadas(turma.getVagasOcupadas() - 1);
         turma.setStatus("ATIVA");
 
+        // Ao liberar uma vaga, a turma volta a ficar disponível
+        atualizarStatus(turma);
+
         repository.save(turma);
 
         logger.info("[TURMA-SERVICE] Vaga liberada para turma ID: {} | Vagas: {}/{}",
@@ -142,4 +150,17 @@ public class TurmaService {
 
         return true;
     }
+
+    /**
+     * Atualiza o status da turma de acordo com a quantidade de vagas.
+     */
+    private void atualizarStatus(Turma turma) {
+
+        if (turma.getVagasOcupadas() >= turma.getVagasTotal()) {
+            turma.setStatus("LOTADA");
+        } else {
+            turma.setStatus("DISPONIVEL");
+        }
+    }
+
 }
