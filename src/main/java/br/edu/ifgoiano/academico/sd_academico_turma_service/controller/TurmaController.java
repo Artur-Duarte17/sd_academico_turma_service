@@ -2,10 +2,12 @@ package br.edu.ifgoiano.academico.sd_academico_turma_service.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import br.edu.ifgoiano.academico.sd_academico_turma_service.entity.Turma;
+import br.edu.ifgoiano.academico.sd_academico_turma_service.dto.TurmaRequestDTO;
+import br.edu.ifgoiano.academico.sd_academico_turma_service.dto.TurmaResponseDTO;
 import br.edu.ifgoiano.academico.sd_academico_turma_service.service.TurmaService;
 
 import java.util.List;
@@ -37,11 +39,20 @@ public class TurmaController {
      * @return Turma criada com ID gerado
      */
     @PostMapping
-    public ResponseEntity<Turma> criar(@RequestBody Turma turma) {
-        logger.info("[TURMA-SERVICE] Criando turma: {}", turma.getCodigoTurma());
-        Turma turmaSalva = service.salvar(turma);
-        logger.info("[TURMA-SERVICE] Turma criada com ID: {}", turmaSalva.getId());
-        return ResponseEntity.ok(turmaSalva);
+    public ResponseEntity<?> criar(@RequestBody TurmaRequestDTO request) {
+        logger.info("[TURMA-SERVICE] Criando turma: {}", request.getCodigoTurma());
+        try {
+            TurmaResponseDTO turmaSalva = service.salvar(request);
+            logger.info("[TURMA-SERVICE] Turma criada com ID: {}", turmaSalva.getId());
+            return ResponseEntity.ok(turmaSalva);
+        } catch (IllegalArgumentException dadosInvalidos) {
+            // disciplina inexistente ou não informada
+            return ResponseEntity.badRequest().body(dadosInvalidos.getMessage());
+        } catch (IllegalStateException servicoIndisponivel) {
+            // disciplina-service fora do ar
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(servicoIndisponivel.getMessage());
+        }
     }
 
     /**
@@ -49,7 +60,7 @@ public class TurmaController {
      * @return Lista de turmas
      */
     @GetMapping
-    public ResponseEntity<List<Turma>> listar() {
+    public ResponseEntity<List<TurmaResponseDTO>> listar() {
         logger.info("[TURMA-SERVICE] Listando todas as turmas");
         return ResponseEntity.ok(service.listar());
     }
