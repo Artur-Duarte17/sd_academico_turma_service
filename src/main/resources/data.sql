@@ -38,3 +38,8 @@ INSERT INTO turmas (
     25,
     'LOTADA'
 );
+
+-- Os INSERTs acima usam IDs explícitos (1, 2, 3). No H2, isso NÃO avança o
+-- contador da coluna IDENTITY, então a próxima turma criada via API tentaria
+-- reutilizar o ID 1 e colidiria com a PK. Reposicionamos a sequência para 4.
+ALTER TABLE turmas ALTER COLUMN id RESTART WITH 4;
